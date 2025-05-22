@@ -39,7 +39,7 @@ const SemanticSearchUI: React.FC<{ app: App; settings: SemanticSearchSettings }>
   const [results, setResults] = useState<{ path: string; content: string }[]>([]);
   const [loading, setLoading] = useState(false);
   const [syncing, setSyncing] = useState(false);
-  const [syncSuccess, setSyncSuccess] = useState(false);
+  const [syncMessage, setSyncMessage] = useState('');
 
   const handleSearch = async() => {
     setLoading(true);
@@ -50,7 +50,7 @@ const SemanticSearchUI: React.FC<{ app: App; settings: SemanticSearchSettings }>
 
   const handleSync = async() => {
     setSyncing(true);
-    setSyncSuccess(false);
+    setSyncMessage('');
 
     const files = app.vault.getMarkdownFiles();
     const rawNotes = await Promise.all(files.map(async(file: TFile) => ({
@@ -58,11 +58,15 @@ const SemanticSearchUI: React.FC<{ app: App; settings: SemanticSearchSettings }>
       content: await app.vault.read(file)
     })));
 
-    await syncNotes(rawNotes, settings);
+    try {
+      await syncNotes(rawNotes, settings);
 
-    setSyncing(false);
-    setSyncSuccess(true);
-    setTimeout(() => setSyncSuccess(false), 3000);
+      setSyncing(false);
+      setSyncMessage('Notes synced to Astra ✅');
+      setTimeout(() => setSyncMessage(''), 3000);
+    } catch(err) {
+      setSyncMessage('Error syncing notes: ' + err.message);
+    }
   };
 
   return (
@@ -83,7 +87,7 @@ const SemanticSearchUI: React.FC<{ app: App; settings: SemanticSearchSettings }>
           {syncing ? 'Syncing…' : 'Sync Notes'}
         </button>
       </div>
-      {syncSuccess && <div style={{ marginTop: '0.5rem', color: 'green' }}>Notes synced to Astra ✅</div>}
+      {syncMessage && <div style={{ marginTop: '0.5rem', color: 'green' }}>{syncMessage}</div>}
       <ul style={{ marginTop: '1rem' }}>
         {results.map((note, i) => (
           <li
