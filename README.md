@@ -12,9 +12,9 @@ Currently, you need to download this plugin from GitHub releases.
 3. Download the files from [v1.0.0 of this plugin](https://github.com/vkarpov15/obsidian-astra-semantic-search/releases/tag/1.0.0):
 
 ```
-curl -OL https://github.com/vkarpov15/obsidian-astra-semantic-search/releases/download/1.0.0/main.js
-curl -OL https://github.com/vkarpov15/obsidian-astra-semantic-search/releases/download/1.0.0/manifest.json
-curl -OL https://github.com/vkarpov15/obsidian-astra-semantic-search/releases/download/1.0.0/styles.css
+curl -OL https://github.com/vkarpov15/obsidian-astra-semantic-search/releases/download/1.0.1/main.js
+curl -OL https://github.com/vkarpov15/obsidian-astra-semantic-search/releases/download/1.0.1/manifest.json
+curl -OL https://github.com/vkarpov15/obsidian-astra-semantic-search/releases/download/1.0.1/styles.css
 ```
 
 4. Go to `Settings` -> `Community Plugins` and make sure `astra-semantic-search` is enabled

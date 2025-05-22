@@ -1,7 +1,7 @@
 {
 	"id": "astra-semantic-search",
 	"name": "astra-semantic-search",
-	"version": "1.0.0",
+	"version": "1.0.1",
 	"minAppVersion": "0.15.0",
 	"description": "Sync your Obsidian notes to DataStax Astra cluster",
 	"author": "Obsidian",
