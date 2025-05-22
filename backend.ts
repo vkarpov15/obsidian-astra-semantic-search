@@ -1,50 +1,70 @@
 import mongoose from 'mongoose';
-import { driver, createAstraUri } from '@datastax/astra-mongoose';
+import {
+  Vectorize,
+  driver,
+  createAstraUri,
+  tableDefinitionFromSchema
+} from '@datastax/astra-mongoose';
 import { DEFAULT_SETTINGS, SemanticSearchSettings } from './settings';
 
-mongoose.setDriver(driver);
-mongoose.set('autoCreate', false);
-mongoose.set('autoIndex', false);
-mongoose.set('debug', true);
+const m = mongoose.setDriver(driver);
+m.set('autoCreate', false);
+m.set('autoIndex', false);
+m.set('debug', true);
 
 let settings: SemanticSearchSettings | null = null;
 export async function useSettings(newSettings: SemanticSearchSettings) {
   if (settings == null) {
     settings = newSettings;
-    await mongoose.connect(
-      createAstraUri(settings.astraEndpoint, settings.astraToken, settings.astraKeyspace)
+    await m.connect(
+      createAstraUri(settings.astraEndpoint, settings.astraToken, settings.astraKeyspace),
+      { isTable: true, autoCreate: false }
     );
-    await Note.createCollection();
+    await m.connection.createTable(
+      Note.collection.collectionName,
+      tableDefinitionFromSchema(Note.schema),
+      { ifNotExists: true }
+    );
+    await Note.syncIndexes();
   } else if (
     Object.keys(DEFAULT_SETTINGS).find(
       (key: keyof SemanticSearchSettings) => settings![key] !== newSettings[key]
     )
   ) {
     settings = newSettings;
-    await mongoose.disconnect();
-    await mongoose.connect(
-      createAstraUri(settings.astraEndpoint, settings.astraToken, settings.astraKeyspace)
+    await m.disconnect();
+    await m.connect(
+      createAstraUri(settings.astraEndpoint, settings.astraToken, settings.astraKeyspace),
+      { isTable: true, autoCreate: false }
     );
-    await Note.createCollection();
+    await m.connection.createTable(
+      Note.collection.collectionName,
+      tableDefinitionFromSchema(Note.schema),
+      { ifNotExists: true }
+    );
+    await Note.syncIndexes();
   }
 }
 
-const noteSchema = new mongoose.Schema({
-  path: String,
-  content: String,
-  $vector: { type: [Number] },
-  $vectorize: String
-}, {
-  collectionOptions: {
-    vector: {
-      dimension: 1024,
-      metric: 'cosine',
-      service: { provider: 'nvidia', modelName: 'NV-Embed-QA' }
+const noteSchema = new m.Schema({
+  _id: String,
+  path: { type: String, required: true },
+  content: { type: String, required: true },
+  // This pattern for defining vectorize works as well,
+  // just doesn't have great type checking. Won't catch
+  // type errors in `service` or `dimension`.
+  vector: {
+    type: Vectorize,
+    dimension: 1024,
+    index: { name: 'vector', vector: true },
+    service: {
+      provider: 'nvidia',
+      modelName: 'NV-Embed-QA'
     }
   }
-});
+}, { versionKey: false });
 
-export const Note = mongoose.model(
+export const Note = m.model(
   'Note',
   noteSchema
 );
@@ -57,8 +77,8 @@ export async function syncNotes(
 
   for (const { path, content } of rawNotes) {
     await Note.updateOne(
-      { path },
-      { content, $vectorize: content },
+      { _id: path },
+      { path, content, vector: content },
       { upsert: true }
     );
     console.log('Synced:', path);
@@ -67,7 +87,7 @@ export async function syncNotes(
 
 export async function runSemanticSearch(query: string, settings: SemanticSearchSettings) {
   await useSettings(settings);
-  const notes = await Note.find().sort({ $vectorize: { $meta: query } }).limit(3);
+  const notes = await Note.find().sort({ vector: { $meta: query } }).limit(3);
   console.log('Got notes', notes);
   return notes;
 }

@@ -5,14 +5,12 @@ export interface SemanticSearchSettings {
   astraToken: string;
   astraEndpoint: string;
 	astraKeyspace: string;
-  astraCollection: string; // ✅ new field
 }
 
 export const DEFAULT_SETTINGS: SemanticSearchSettings = {
   astraToken: '',
   astraEndpoint: '',
-  astraKeyspace: 'default_keyspace',
-  astraCollection: 'notes' // ✅ sensible default
+  astraKeyspace: 'default_keyspace'
 };
 
 export class SemanticSearchSettingTab extends PluginSettingTab {
@@ -65,19 +63,6 @@ export class SemanticSearchSettingTab extends PluginSettingTab {
           .setValue(settings.astraKeyspace)
           .onChange(async(value) => {
             settings.astraKeyspace = value;
-            await this.plugin.saveSettings();
-          })
-      );
-
-    new Setting(containerEl)
-      .setName('Collection')
-      .setDesc('Astra DB collection to store and search notes')
-      .addText(text =>
-        text
-          .setPlaceholder('e.g. notes')
-          .setValue(settings.astraCollection)
-          .onChange(async(value) => {
-            settings.astraCollection = value;
             await this.plugin.saveSettings();
           })
       );

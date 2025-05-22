@@ -4,9 +4,13 @@ import { SemanticSearchPanel, VIEW_TYPE_SEMANTIC_SEARCH } from './SemanticSearch
 
 // Hack for CORS requests
 import nfetch, { Headers, Request, Response } from 'node-fetch';
+// @ts-ignore
 globalThis.fetch = nfetch;
+// @ts-ignore
 globalThis.Headers = Headers;
+// @ts-ignore
 globalThis.Request = Request;
+// @ts-ignore
 globalThis.Response = Response;
 
 export default class SemanticSearchPlugin extends Plugin {

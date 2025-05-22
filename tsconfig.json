@@ -3,6 +3,7 @@
     "baseUrl": ".",
     "jsx": "react-jsx",
     "inlineSourceMap": true,
+    "allowSyntheticDefaultImports": true,
     "inlineSources": true,
     "module": "ESNext",
     "target": "ES6",
