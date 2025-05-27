@@ -6,6 +6,7 @@ import {
   tableDefinitionFromSchema
 } from '@datastax/astra-mongoose';
 import { DEFAULT_SETTINGS, SemanticSearchSettings } from './settings';
+import nfetch from 'node-fetch';
 
 const m = mongoose.setDriver(driver);
 m.set('autoCreate', false);
@@ -13,12 +14,13 @@ m.set('autoIndex', false);
 m.set('debug', true);
 
 let settings: SemanticSearchSettings | null = null;
+const httpOptions = Object.freeze({ client: customElements, fetcher: { fetch: nfetch } });
 export async function useSettings(newSettings: SemanticSearchSettings) {
   if (settings == null) {
     settings = newSettings;
     await m.connect(
       createAstraUri(settings.astraEndpoint, settings.astraToken, settings.astraKeyspace),
-      { isTable: true, autoCreate: false }
+      { isTable: true, autoCreate: false, httpOptions }
     );
     await m.connection.createTable(
       Note.collection.collectionName,
@@ -35,7 +37,7 @@ export async function useSettings(newSettings: SemanticSearchSettings) {
     await m.disconnect();
     await m.connect(
       createAstraUri(settings.astraEndpoint, settings.astraToken, settings.astraKeyspace),
-      { isTable: true, autoCreate: false }
+      { isTable: true, autoCreate: false, httpOptions }
     );
     await m.connection.createTable(
       Note.collection.collectionName,
@@ -83,6 +85,27 @@ export async function syncNotes(
     );
     console.log('Synced:', path);
   }
+}
+
+export async function syncNote(
+  note: { path: string, content: string },
+  settings: SemanticSearchSettings
+) {
+  await useSettings(settings);
+
+  const { path, content } = note;
+  await Note.updateOne(
+    { _id: path },
+    { path, content, vector: content },
+    { upsert: true }
+  );
+  console.log('Synced:', path);
+}
+
+export async function deleteNote(path: string, settings: SemanticSearchSettings) {
+  await useSettings(settings);
+  await Note.deleteOne({ _id: path });
+  console.log('Deleted', path);
 }
 
 export async function runSemanticSearch(query: string, settings: SemanticSearchSettings) {

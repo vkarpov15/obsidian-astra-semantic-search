@@ -28,3 +28,5 @@ curl -OL https://github.com/vkarpov15/obsidian-astra-semantic-search/releases/do
 6. Click the search icon on the left ("Open Semantic Search") to open the Astra Semantic Search UI. Then click "Sync Notes" to sync your notes to Astra!
 
 <img src="https://i.imgur.com/Mmwo84l.png">
+
+Astra-semantic-search will automatically sync any changes you make to your notes to Astra. However, you still need to run the initial sync to make sure any notes that you haven't modified are synced to Astra.
