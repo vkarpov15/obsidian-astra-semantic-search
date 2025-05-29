@@ -7,6 +7,7 @@ import {
 } from '@datastax/astra-mongoose';
 import { DEFAULT_SETTINGS, SemanticSearchSettings } from './settings';
 import nfetch from 'node-fetch';
+import { FetcherRequestInfo } from '@datastax/astra-db-ts';
 
 const m = mongoose.setDriver(driver);
 m.set('autoCreate', false);
@@ -14,7 +15,27 @@ m.set('autoIndex', false);
 m.set('debug', true);
 
 let settings: SemanticSearchSettings | null = null;
-const httpOptions = Object.freeze({ client: customElements, fetcher: { fetch: nfetch } });
+const httpOptions = Object.freeze({
+  client: 'custom',
+  fetcher: {
+    async fetch(info: FetcherRequestInfo) {
+      const resp = await nfetch(info.url, info);
+      const headers: Record<string, string> = {};
+      resp.headers.forEach((value, key) => {
+        headers[key] = value;
+      });
+
+      return {
+        url: resp.url,
+        statusText: resp.statusText,
+        httpVersion: 1 as const,
+        headers,
+        body: await resp.text(),
+        status: resp.status
+      };
+    }
+  }
+});
 export async function useSettings(newSettings: SemanticSearchSettings) {
   if (settings == null) {
     settings = newSettings;

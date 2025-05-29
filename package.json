@@ -25,7 +25,7 @@
 		"typescript": "5.x"
 	},
 	"dependencies": {
-		"@datastax/astra-mongoose": "^1.0.0",
+		"@datastax/astra-mongoose": "^1.0.1",
 		"@masteringjs/eslint-config": "^0.0.1",
 		"esbuild-plugin-alias": "^0.2.1",
 		"eslint": "^8.57.1",
