@@ -1,7 +1,7 @@
 import { Notice, Plugin, TFile, WorkspaceLeaf } from 'obsidian';
-import { SemanticSearchSettingTab, DEFAULT_SETTINGS, SemanticSearchSettings } from './settings';
+import { SemanticSearchSettingTab } from './settings';
 import { SemanticSearchPanel, VIEW_TYPE_SEMANTIC_SEARCH } from './SemanticSearchView';
-import { syncNote, deleteNote } from './backend';
+import { syncNote, deleteNote, DEFAULT_SETTINGS, SemanticSearchSettings } from './backend';
 
 export default class SemanticSearchPlugin extends Plugin {
   settings: SemanticSearchSettings;
@@ -19,7 +19,7 @@ export default class SemanticSearchPlugin extends Plugin {
     this.addRibbonIcon('search', 'Open Semantic Search', async() => {
       await this.activateView();
     });
-		
+
     this.addCommand({
       id: 'open-semantic-search-ui',
       name: 'Open Semantic Search Panel',
@@ -27,18 +27,18 @@ export default class SemanticSearchPlugin extends Plugin {
         await this.activateView();
       }
     });
-    
+
     this.registerEvent(
       this.app.vault.on('modify', (file) => {
         if (file instanceof TFile && file.extension === 'md') {
           const path = file.path;
-    
+
           debouncePerPath(path, () => {
             if (!this.app.vault.getAbstractFileByPath(path)) {
               console.log(`[SKIPPED] File ${path} was deleted before sync`);
               return;
             }
-    
+
             this.app.vault.read(file)
               .then((content) => syncNote({ path, content }, this.settings))
               .catch(err => {
@@ -48,7 +48,7 @@ export default class SemanticSearchPlugin extends Plugin {
         }
       })
     );
-    
+
 
     this.registerEvent(
       this.app.vault.on(
@@ -98,18 +98,18 @@ export default class SemanticSearchPlugin extends Plugin {
 
   async activateView() {
     const { workspace } = this.app;
-	
+
     workspace.detachLeavesOfType(VIEW_TYPE_SEMANTIC_SEARCH);
-	
+
     const leaf = workspace.getRightLeaf(false);
     await leaf!.setViewState({
       type: VIEW_TYPE_SEMANTIC_SEARCH,
       active: true
     });
-	
+
     workspace.revealLeaf(leaf as WorkspaceLeaf);
   }
-	
+
 
   async loadSettings() {
     this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());

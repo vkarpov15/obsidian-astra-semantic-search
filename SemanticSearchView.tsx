@@ -2,7 +2,7 @@ import { App, ItemView, TFile, WorkspaceLeaf } from 'obsidian';
 import { createRoot, Root } from 'react-dom/client';
 import React, { useState } from 'react';
 import { runSemanticSearch, syncNotes } from './backend';
-import type { SemanticSearchSettings } from './settings';
+import type { SemanticSearchSettings } from './backend';
 
 export const VIEW_TYPE_SEMANTIC_SEARCH = 'semantic-search-view';
 
