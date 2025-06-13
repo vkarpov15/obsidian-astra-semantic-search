@@ -29,8 +29,9 @@
 		"@masteringjs/eslint-config": "^0.0.1",
 		"esbuild-plugin-alias": "^0.2.1",
 		"eslint": "^8.57.1",
+		"langchain": "^0.3.28",
 		"mongoose": "^8.14.3",
-		"node-fetch": "^3.3.2",
+		"node-fetch": "2.x",
 		"react": "^19.1.0",
 		"react-dom": "^19.1.0",
 		"ts-node": "^10.9.2"

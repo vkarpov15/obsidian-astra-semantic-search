@@ -5,14 +5,32 @@ import {
   createAstraUri,
   tableDefinitionFromSchema
 } from '@datastax/astra-mongoose';
-import { DEFAULT_SETTINGS, SemanticSearchSettings } from './settings';
 import nfetch from 'node-fetch';
 import { FetcherRequestInfo } from '@datastax/astra-db-ts';
+import { RecursiveCharacterTextSplitter } from 'langchain/text_splitter';
+
+const splitter = new RecursiveCharacterTextSplitter({
+  chunkSize: 1536,
+  chunkOverlap: 100,
+  separators: ['\n\n', '\n', ' ', ''],
+});
 
 const m = mongoose.setDriver(driver);
 m.set('autoCreate', false);
 m.set('autoIndex', false);
 m.set('debug', true);
+
+export interface SemanticSearchSettings {
+  astraToken: string;
+  astraEndpoint: string;
+	astraKeyspace: string;
+}
+
+export const DEFAULT_SETTINGS: SemanticSearchSettings = {
+  astraToken: '',
+  astraEndpoint: '',
+  astraKeyspace: 'default_keyspace'
+};
 
 let settings: SemanticSearchSettings | null = null;
 const httpOptions = Object.freeze({
@@ -72,6 +90,7 @@ export async function useSettings(newSettings: SemanticSearchSettings) {
 const noteSchema = new m.Schema({
   _id: String,
   path: { type: String, required: true },
+  chunkIndex: { type: Number, required: true },
   content: { type: String, required: true },
   // This pattern for defining vectorize works as well,
   // just doesn't have great type checking. Won't catch
@@ -99,12 +118,7 @@ export async function syncNotes(
   await useSettings(settings);
 
   for (const { path, content } of rawNotes) {
-    await Note.updateOne(
-      { _id: path },
-      { path, content, vector: content },
-      { upsert: true }
-    );
-    console.log('Synced:', path);
+    await syncNote({ path, content }, settings);
   }
 }
 
@@ -115,11 +129,22 @@ export async function syncNote(
   await useSettings(settings);
 
   const { path, content } = note;
-  await Note.updateOne(
-    { _id: path },
-    { path, content, vector: content },
-    { upsert: true }
+
+  const chunks = await splitter.createDocuments([content]);
+
+  const existingNotes = await Note.find({ path });
+  await Promise.all(existingNotes.map(note => Note.deleteOne({ _id: note._id })));
+
+  await Promise.all(
+    chunks.map(
+      (chunk, chunkIndex) => Note.updateOne(
+        { _id: `${path} - ${chunkIndex}` },
+        { path, chunkIndex, content: chunk.pageContent, vector: chunk.pageContent },
+        { upsert: true }
+      )
+    )
   );
+
   console.log('Synced:', path);
 }
 
@@ -135,4 +160,3 @@ export async function runSemanticSearch(query: string, settings: SemanticSearchS
   console.log('Got notes', notes);
   return notes;
 }
-

@@ -1,18 +1,6 @@
 import { App, PluginSettingTab, Setting } from 'obsidian';
 import SemanticSearchPlugin from './main';
 
-export interface SemanticSearchSettings {
-  astraToken: string;
-  astraEndpoint: string;
-	astraKeyspace: string;
-}
-
-export const DEFAULT_SETTINGS: SemanticSearchSettings = {
-  astraToken: '',
-  astraEndpoint: '',
-  astraKeyspace: 'default_keyspace'
-};
-
 export class SemanticSearchSettingTab extends PluginSettingTab {
   plugin: SemanticSearchPlugin;
 
@@ -68,4 +56,3 @@ export class SemanticSearchSettingTab extends PluginSettingTab {
       );
   }
 }
-
